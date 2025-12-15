@@ -3,13 +3,17 @@ const ctx = canvas.getContext('2d');
 
 let width, height;
 let target = { x: 0, y: 0 };
-let tick = 0; 
+let tick = 0;
+let currentOpacity = 0; 
+let targetOpacity = 0;  
 
 const settings = {
     tentacles: 60,     
-    length: 30,         
-    radius: 10,         
-    color: '#cc00ffff'   
+    length: 30,        
+    radius: 10,        
+    colorR: 204, 
+    colorG: 0,   
+    colorB: 255  
 };
 
 class Tentacle {
@@ -18,11 +22,15 @@ class Tentacle {
         this.segments = [];
         this.angleOffset = (index * 0.1); 
         for (let i = 0; i < this.length; i++) {
-            this.segments.push({
-                x: x,
-                y: y
-            });
+            this.segments.push({ x: x, y: y });
         }
+    }
+
+    reset(x, y) {
+        this.segments.forEach(segment => {
+            segment.x = x;
+            segment.y = y;
+        });
     }
 
     move(targetX, targetY) {
@@ -44,6 +52,7 @@ class Tentacle {
     }
 
     draw(ctx) {
+        if (currentOpacity < 0.01) return;
         ctx.beginPath();
         ctx.moveTo(this.segments[0].x, this.segments[0].y);
         for (let i = 1; i < this.length - 1; i++) {
@@ -53,7 +62,7 @@ class Tentacle {
         }
         let last = this.segments[this.length - 1];
         ctx.lineTo(last.x, last.y);
-        ctx.strokeStyle = settings.color;
+        ctx.strokeStyle = `rgba(${settings.colorR}, ${settings.colorG}, ${settings.colorB}, ${currentOpacity})`;
         ctx.lineWidth = 1.5;        
         ctx.stroke();
         ctx.closePath();
@@ -75,32 +84,63 @@ function resize() {
     height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    target.x = width / 2;
-    target.y = height / 2;
 }
 
 function animate() {
     requestAnimationFrame(animate);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = 'rgba(0, 0, 0, 1)'; 
     ctx.fillRect(0, 0, width, height);
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = settings.color;
+    currentOpacity += (targetOpacity - currentOpacity) * 0.05;
+    if (currentOpacity > 0.01) {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = `rgba(${settings.colorR}, ${settings.colorG}, ${settings.colorB}, ${currentOpacity})`;
+    }
     tick++; 
     tentacles.forEach(tentacle => {
         tentacle.move(target.x, target.y);
         tentacle.draw(ctx);
     });
-    ctx.shadowBlur = 0; 
 }
 
 window.addEventListener('resize', resize);
+
 window.addEventListener('mousemove', (e) => {
+    if (targetOpacity === 0) {
+        target.x = e.clientX;
+        target.y = e.clientY;
+        tentacles.forEach(t => t.reset(target.x, target.y));
+    }
+    targetOpacity = 1;
     target.x = e.clientX;
     target.y = e.clientY;
 });
+
+document.addEventListener('mouseleave', () => {
+    targetOpacity = 0;
+});
+
+document.addEventListener('mouseenter', (e) => {
+    targetOpacity = 1;
+    target.x = e.clientX;
+    target.y = e.clientY;
+    tentacles.forEach(t => t.reset(target.x, target.y));
+});
+
 window.addEventListener('touchmove', (e) => {
+    if (targetOpacity === 0) {
+        target.x = e.touches[0].clientX;
+        target.y = e.touches[0].clientY;
+        tentacles.forEach(t => t.reset(target.x, target.y));
+    }
+    targetOpacity = 1;
     target.x = e.touches[0].clientX;
     target.y = e.touches[0].clientY;
+});
+
+window.addEventListener('touchend', () => {
+    targetOpacity = 0;
 });
 
 init();
