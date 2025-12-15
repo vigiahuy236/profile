@@ -9,7 +9,7 @@ const settings = {
     tentacles: 60,     
     length: 30,         
     radius: 10,         
-    color: '#00ABFF'   
+    color: '#cc00ffff'   
 };
 
 class Tentacle {
