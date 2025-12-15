@@ -16,8 +16,7 @@ class Tentacle {
     constructor(x, y, index) {
         this.length = settings.length;
         this.segments = [];
-        this.angleOffset = (index * 0.1);
-        
+        this.angleOffset = (index * 0.1); 
         for (let i = 0; i < this.length; i++) {
             this.segments.push({
                 x: x,
@@ -33,7 +32,6 @@ class Tentacle {
         for (let i = 1; i < this.length; i++) {
             let prev = this.segments[i - 1];
             let curr = this.segments[i];
-
             let dx = prev.x - curr.x;
             let dy = prev.y - curr.y;
             let angle = Math.atan2(dy, dx);
