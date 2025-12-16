@@ -4,9 +4,10 @@ const ctx = canvas.getContext('2d');
 let width, height;
 let target = { x: 0, y: 0 };
 let tick = 0; 
+let hasStarted = false;
 
 const settings = {
-    tentacles: 60,     
+    tentacles: 40,
     length: 30,         
     radius: 10,         
     color: '#cc00ffff'   
@@ -18,10 +19,7 @@ class Tentacle {
         this.segments = [];
         this.angleOffset = (index * 0.1); 
         for (let i = 0; i < this.length; i++) {
-            this.segments.push({
-                x: x,
-                y: y
-            });
+            this.segments.push({ x: x, y: y });
         }
     }
 
@@ -64,6 +62,8 @@ let tentacles = [];
 
 function init() {
     resize();
+    target.x = width / 2;
+    target.y = height / 2;
     tentacles = [];
     for (let i = 0; i < settings.tentacles; i++) {
         tentacles.push(new Tentacle(width / 2, height / 2, i));
@@ -75,8 +75,6 @@ function resize() {
     height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    target.x = width / 2;
-    target.y = height / 2;
 }
 
 function animate() {
@@ -84,7 +82,7 @@ function animate() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
     ctx.fillRect(0, 0, width, height);
     ctx.shadowBlur = 10;
-    ctx.shadowColor = settings.color;
+    ctx.shadowColor = settings.color; 
     tick++; 
     tentacles.forEach(tentacle => {
         tentacle.move(target.x, target.y);
@@ -93,15 +91,35 @@ function animate() {
     ctx.shadowBlur = 0; 
 }
 
-window.addEventListener('resize', resize);
+function updateInput(x, y) {
+    target.x = x;
+    target.y = y;
+    if (!hasStarted) {
+        hasStarted = true;
+        canvas.classList.add('visible'); 
+    }
+}
+
+window.addEventListener('resize', () => {
+    resize();
+    init();
+});
+
 window.addEventListener('mousemove', (e) => {
-    target.x = e.clientX;
-    target.y = e.clientY;
+    updateInput(e.clientX, e.clientY);
 });
+
 window.addEventListener('touchmove', (e) => {
-    target.x = e.touches[0].clientX;
-    target.y = e.touches[0].clientY;
-});
+    if(e.touches.length > 0) {
+        updateInput(e.touches[0].clientX, e.touches[0].clientY);
+    }
+}, { passive: true });
+
+window.addEventListener('touchstart', (e) => {
+    if(e.touches.length > 0) {
+        updateInput(e.touches[0].clientX, e.touches[0].clientY);
+    }
+}, { passive: true });
 
 init();
 animate();
